@@ -1,0 +1,9 @@
+__pycache__/
+igbot
+.env
+# Logs
+logs/*
+!logs/.gitkeep
+.venv/*
+openapi_letta.json
+openapi_openai.json
