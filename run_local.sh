@@ -33,6 +33,7 @@ echo "Waiting for Letta service to be ready..."
 ATTEMPTS=0
 MAX_ATTEMPTS=30
 until curl -s http://localhost:8283 > /dev/null || [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; do
+    curl -s http://localhost:8283
     echo "Waiting for Letta service... ($(($MAX_ATTEMPTS - $ATTEMPTS)) attempts remaining)"
     sleep 5
     ATTEMPTS=$((ATTEMPTS + 1))
