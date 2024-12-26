@@ -19,7 +19,7 @@ done
 echo "All required environment variables are set."
 
 # run letta server
-letta server > /dev/null 2>&1 &
+python3 -m letta server --port 8283 > /dev/null 2>&1 &
 
 if [ $? -ne 0 ]; then
     echo "Error: Failed to start Letta service!"
