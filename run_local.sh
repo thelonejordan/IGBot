@@ -32,8 +32,9 @@ echo "Waiting for Letta service to be ready..."
 # Wait for Letta service to be healthy (max 150 seconds)
 ATTEMPTS=0
 MAX_ATTEMPTS=30
-until curl -s http://localhost:8283 > /dev/null || [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; do
-    curl -s http://localhost:8283
+until curl http://localhost:8283/v1/health > /dev/null || [ $ATTEMPTS -eq $MAX_ATTEMPTS ]; do
+    echo ">>>>DEBUG<<<<"
+    curl -v --trace-ascii trace.log http://localhost:8283/v1/health
     echo "Waiting for Letta service... ($(($MAX_ATTEMPTS - $ATTEMPTS)) attempts remaining)"
     sleep 5
     ATTEMPTS=$((ATTEMPTS + 1))
