@@ -18,7 +18,7 @@ logger = logging.getLogger('instagram_webhook')
 
 class AgentResponseGenerator:
     def __init__(self):
-        self.client = create_client(base_url="http://localhost:8283")
+        self.client = create_client(base_url=os.getenv("LETTA_SERVER", "http://localhost:8283"))
 
         self.system_prompt = SOFIA_SYSTEM_PROMPT
 
