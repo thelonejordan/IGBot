@@ -89,14 +89,14 @@ class AgentResponseGenerator:
             
             return {
                 "text": response_text,
-                "typing_duration": duration
+                "typing_duration": 0 # duration
             }
             
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}", exc_info=True)
             return {
                 "text": SOFIA_FALLBACKS.get(message_type, SOFIA_FALLBACKS["text"]),
-                "typing_duration": 2
+                "typing_duration": 0 # 2
             }
     
     def _get_context_for_message_type(self, message_type: str, user_message: str) -> str:
