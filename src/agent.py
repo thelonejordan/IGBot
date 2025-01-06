@@ -77,9 +77,10 @@ class AgentResponseGenerator:
             )
 
             # handle the tool call message
+            response_text = None
             for message in response.messages:
                 if message.message_type == "tool_call_message" and message.tool_call.name == "send_message":
-                    response_text = json.loads(message.tool_call.arguments).get("message", "")
+                    response_text = json.loads(message.tool_call.arguments).get("message")
                     
 
             
