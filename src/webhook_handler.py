@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 import os
 from dotenv import load_dotenv
 from src.instagram_api import InstagramAPI
-from src.agent import AgentResponseGenerator
+from src.agents.agent_letta import AgentResponseGenerator
 import logging
 from datetime import datetime
 import sys
