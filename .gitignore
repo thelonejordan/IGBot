@@ -7,3 +7,7 @@ logs/*
 .venv/*
 openapi_letta.json
 openapi_openai.json
+sample.py
+script.py
+test_image.png
+.env.template

@@ -1,5 +1,5 @@
 import asyncio
-from src.agent import AgentResponseGenerator
+from src.agents.agent_letta import AgentResponseGenerator
 
 from dotenv import load_dotenv
 
