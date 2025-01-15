@@ -1,24 +1,16 @@
 from dotenv import load_dotenv
 load_dotenv()
 
-# import asyncio
-from src.prompts.sofia_prompt import (
-    SOFIA_SYSTEM_PROMPT,
-    SOFIA_FALLBACKS,
-    SOFIA_TIMING
-)
+from src.prompts.sofia_prompt import SOFIA_SYSTEM_PROMPT
 
+# import asyncio
 # user_id = 1234
 # user_message = "Hello"
 # response = asyncio.run(agent.generate_response(user_message, user_id))
 # print(response)
 
-def divider(n): print("\n"+"-"*n)
-
 import os
 from langchain_openai import ChatOpenAI
-# from langchain_community.tools import TavilySearchResults
-from langchain_community.callbacks import get_openai_callback
 from langchain.schema import SystemMessage, HumanMessage
 from langgraph.graph import MessagesState, StateGraph
 from langgraph.checkpoint.memory import MemorySaver
@@ -28,7 +20,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 # set_debug(True)
 # set_verbose(True)
 
-from langchain_core.tools import tool, InjectedToolArg
+from langchain_core.tools import tool #, InjectedToolArg
+from langchain_core.runnables.config import RunnableConfig
 
 @tool
 def send_message(message: str) -> str:  # user_id: InjectedToolArg
@@ -38,7 +31,7 @@ def send_message(message: str) -> str:  # user_id: InjectedToolArg
     return f"replied: {message}"
 
 @tool
-def send_image() -> str:  # user_id: InjectedToolArg
+def send_image(config: RunnableConfig) -> str:  # user_id: InjectedToolArg
     """
     Tool that sends an image to the user or human. Only invoke this tool when user demands for an image or photo.
     """
@@ -48,13 +41,14 @@ def send_image() -> str:  # user_id: InjectedToolArg
     file_ids = [
         "1UxQlWbG4m7tc3rLC6FwQsk7gE4tYTTbC",
         "1CLNfx1lxX4Q2mSyRkwqr8sq9D3TvLa2E",
-        "1L_5X2LfooJZ-yHhCUijApCDaCXE_DfbS",
-        "13D0lr_Vs2s9XkOFdCAgi7hFvY8tQbz4u",
-        "1FLrrb8ssuoc7JAvjY4bPxahZyuWpXmUs",
+        "1IGRz4uvagUU5e_3gTxwSH8KRydzmrVjQ",
+        "1LES_c6k3hfA0859eiek-U1y2Fauq29vC",
+        "1x6QlxhSo1fXdtUJJE63v-J6Cpu__Tnu3",
+        "1GcvuCRrxqwa3U_UBP9lKsPJOlvkgqAvA",
     ]
-
+    user_id = config.get("configurable", {}).get("user_id")
     file_id = file_ids[random.randint(0, len(file_ids)-1)]
-    api.send_media_message("1512552969452550", f"https://drive.google.com/uc?export=download&id={file_id}", "image")
+    api.send_media_message(user_id, f"https://drive.google.com/uc?export=download&id={file_id}", "image")
     return f"image sent: sophia is posing in a beach."
 
 def create_app(model_config, system_prompt, tools):
@@ -79,38 +73,37 @@ def create_app(model_config, system_prompt, tools):
     app = graph.compile(checkpointer=memory)
     return app
 
-def get_app_config(thread_id):
-    return {"configurable": {"thread_id": thread_id}}
+def get_app_config(thread_id, user_id):
+    return {"configurable": {"thread_id": thread_id, "user_id": user_id}}
 
 def main():
+    from langchain_community.callbacks import get_openai_callback
+
+    def divider(n): print("\n"+"-"*n)
+
     model_config = dict(
         model = "gpt-4o-mini",  # https://platform.openai.com/docs/models/gpt-4-and-gpt-4-turbo#gpt-4-turbo-and-gpt-4
         api_key=os.getenv("OPENAI_API_KEY"),
         max_tokens=150,
         temperature=0.7,
     )
-    # tool = TavilySearchResults(max_results=2)
+
     tools = [send_image]
     app = create_app(model_config, SOFIA_SYSTEM_PROMPT, tools)
     # app.get_graph().draw_mermaid_png(output_file_path="graph.png")
 
-    user_id = 1234
-    config = get_app_config(f"user:{user_id}")
+    user_id = "1512552969452550"
+    config = get_app_config(f"user:{user_id}", user_id)
     # user_messages = ["Hello", "tell me about elon musk", "list his companies", "how old is he?"]
-    # user_messages = []
 
     max_steps = 5
     counter = 0
     with get_openai_callback() as cb:
         while counter < max_steps:
-            print("================================= Human Message =================================")
             input_message = [HumanMessage(input("Human: "))]
             output = app.invoke({"messages": input_message}, config)
             output["messages"][-2].pretty_print()  # human
             output["messages"][-1].pretty_print()  # ai
-            # print()
-            # print(output)
-            # user_messages.append(input_message)
             counter += 1
             # if counter == len(user_messages): break
 

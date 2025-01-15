@@ -58,7 +58,7 @@ class AgentResponseGenerator:
                 self.add_new_thread(agent_name)
                 # TODO: populate with older messages if any
 
-            config = get_app_config(agent_name)
+            config = get_app_config(agent_name, user_id)
 
             response = await asyncio.get_event_loop().run_in_executor(
                 None,
