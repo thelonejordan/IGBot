@@ -1,21 +1,16 @@
+from typing import Dict, Any, Optional, List
+import os, sys, asyncio, json, logging, hmac, hashlib, dotenv
+
 from fastapi import FastAPI, Request, Response, HTTPException, Depends, Query
 from fastapi.security import APIKeyHeader
-import hmac
-import hashlib
-import json
-from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, ValidationError
-import os
-from dotenv import load_dotenv
+
 from src.instagram_api import InstagramAPI
-from src.agents.agent_langgraph import AgentResponseGenerator
-import logging
-from datetime import datetime
-import sys
-import asyncio
+from src.agents.agent_langgraph import AgentResponseGenerator as SofiaBeta
+from src.agents.agent_letta import AgentResponseGenerator as Sofia
 from src.response_handler import ResponseHandler
 
-load_dotenv()
+dotenv.load_dotenv()
 
 app = FastAPI(title="Instagram Webhook Handler")
 
@@ -155,7 +150,8 @@ logger = setup_logger()
 
 # Initialize components
 instagram_api = InstagramAPI()
-sofia = AgentResponseGenerator()
+sofia, sofia_beta = Sofia(), SofiaBeta()
+
 logger = setup_logger()
 response_handler = ResponseHandler(instagram_api)
 
@@ -227,9 +223,8 @@ async def handle_message(messaging_item: MessagingItem):
     if sender_id == BOT_ID:
         logger.debug(f"Ignoring message from our bot (ID: {sender_id})")
         return
-    
-    if sender_id not in ("1512552969452550", "1650913908794388", "555467924060888"):
-        return # NOTE: only for testing (remove before production)
+
+    bot = sofia_beta if sender_id in ("1650913908794388", "555467924060888") else sofia
 
     logger.info(f"Processing message from sender {sender_id} to recipient {recipient_id}")
     
@@ -243,7 +238,7 @@ async def handle_message(messaging_item: MessagingItem):
             try:
                 # Generate SOFIA's response with timing
                 logger.debug("Generating SOFIA's response...")
-                response = await sofia.generate_response(
+                response = await bot.generate_response(
                     user_message=message.text,
                     user_id=sender_id,
                     message_type="text"
@@ -266,7 +261,7 @@ async def handle_message(messaging_item: MessagingItem):
                 try:
                     # Generate response for image
                     if attachment.type == "image":
-                        response = await sofia.generate_response(
+                        response = await bot.generate_response(
                             user_message="[Image received]",
                             user_id=sender_id,
                             message_type="image"

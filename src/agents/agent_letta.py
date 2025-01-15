@@ -1,10 +1,4 @@
-import json
-from openai import OpenAI
-import os
-import logging
-import asyncio
-import random
-from typing import Optional
+import json, os, logging, asyncio, random
 
 from letta.client.client import create_client
 from letta.schemas.memory import ChatMemory
