@@ -224,7 +224,7 @@ async def handle_message(messaging_item: MessagingItem):
         logger.debug(f"Ignoring message from our bot (ID: {sender_id})")
         return
 
-    bot = sofia_beta if sender_id in ("1650913908794388", "555467924060888") else sofia
+    bot = sofia_beta if sender_id in ("1512552969452550", "1650913908794388", "555467924060888") else sofia
 
     logger.info(f"Processing message from sender {sender_id} to recipient {recipient_id}")
     
