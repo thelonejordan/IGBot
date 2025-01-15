@@ -42,9 +42,18 @@ def send_image() -> str:  # user_id: InjectedToolArg
     """
     Tool that sends an image to the user or human. Only invoke this tool when user demands for an image or photo.
     """
+    import random
     from src.instagram_api import InstagramAPI
     api = InstagramAPI()
-    api.send_media_message("1512552969452550", "https://drive.google.com/uc?export=download&id=1UxQlWbG4m7tc3rLC6FwQsk7gE4tYTTbC", "image")
+    file_ids = [
+        "1UxQlWbG4m7tc3rLC6FwQsk7gE4tYTTbC",
+        "1L_5X2LfooJZ-yHhCUijApCDaCXE_DfbS",
+        "13D0lr_Vs2s9XkOFdCAgi7hFvY8tQbz4u",
+        "1CLNfx1lxX4Q2mSyRkwqr8sq9D3TvLa2E",
+        "1FLrrb8ssuoc7JAvjY4bPxahZyuWpXmUs"
+    ]
+    file_id = random.randint(0, len(file_ids)-1)
+    api.send_media_message("1512552969452550", f"https://drive.google.com/uc?export=download&id={file_id}", "image")
     return f"image sent: sophia is posing in a beach."
 
 def create_app(model_config, system_prompt, tools):
