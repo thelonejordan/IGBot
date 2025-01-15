@@ -9,7 +9,7 @@ from src.prompts.sofia_prompt import SOFIA_SYSTEM_PROMPT
 # response = asyncio.run(agent.generate_response(user_message, user_id))
 # print(response)
 
-import os
+import os, json
 from langchain_openai import ChatOpenAI
 from langchain.schema import SystemMessage, HumanMessage
 from langgraph.graph import MessagesState, StateGraph
@@ -22,6 +22,8 @@ from langgraph.prebuilt import ToolNode, tools_condition
 
 from langchain_core.tools import tool #, InjectedToolArg
 from langchain_core.runnables.config import RunnableConfig
+
+IMAGES = json.load(open("data/image_metadata.json"))
 
 @tool
 def send_message(message: str) -> str:  # user_id: InjectedToolArg
@@ -38,18 +40,12 @@ def send_image(config: RunnableConfig) -> str:  # user_id: InjectedToolArg
     import random
     from src.instagram_api import InstagramAPI
     api = InstagramAPI()
-    file_ids = [
-        "1UxQlWbG4m7tc3rLC6FwQsk7gE4tYTTbC",
-        "1CLNfx1lxX4Q2mSyRkwqr8sq9D3TvLa2E",
-        "1IGRz4uvagUU5e_3gTxwSH8KRydzmrVjQ",
-        "1LES_c6k3hfA0859eiek-U1y2Fauq29vC",
-        "1x6QlxhSo1fXdtUJJE63v-J6Cpu__Tnu3",
-        "1GcvuCRrxqwa3U_UBP9lKsPJOlvkgqAvA",
-    ]
     user_id = config.get("configurable", {}).get("user_id")
-    file_id = file_ids[random.randint(0, len(file_ids)-1)]
+    images = list(IMAGES["categories"]["1"]["images"].values())
+    image = images[random.randint(0, len(images)-1)]
+    desc, file_id = image["description"], image["fileid"]
     api.send_media_message(user_id, f"https://drive.google.com/uc?export=download&id={file_id}", "image")
-    return f"image sent: sophia is posing in a beach."
+    return f"photo of sophia, {desc}"
 
 def create_app(model_config, system_prompt, tools):
     llm = ChatOpenAI(**model_config).bind_tools(tools)

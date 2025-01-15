@@ -11,3 +11,4 @@ sample.py
 script.py
 test_image.png
 .env.template
+data/imagerepo.csv
