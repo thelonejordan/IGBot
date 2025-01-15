@@ -8,7 +8,7 @@ from pydantic import BaseModel, ValidationError
 import os
 from dotenv import load_dotenv
 from src.instagram_api import InstagramAPI
-from src.agents.agent_letta import AgentResponseGenerator
+from src.agents.agent_langgraph import AgentResponseGenerator
 import logging
 from datetime import datetime
 import sys
@@ -228,6 +228,9 @@ async def handle_message(messaging_item: MessagingItem):
         logger.debug(f"Ignoring message from our bot (ID: {sender_id})")
         return
     
+    if sender_id == "1512552969452550":
+        return # NOTE: only for testing (remove before production)
+
     logger.info(f"Processing message from sender {sender_id} to recipient {recipient_id}")
     
     if messaging_item.message:
