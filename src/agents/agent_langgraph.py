@@ -1,7 +1,8 @@
 from typing import Set, ClassVar
-import os, logging, asyncio, random
+import os, logging, asyncio
 
 from src.agents.langgraph_helpers import create_app, send_image, get_app_config
+from src.agents.agent_letta import _calculate_response_timing
 from src.prompts.sofia_prompt import (
     SOFIA_SYSTEM_PROMPT,
     SOFIA_FALLBACKS,
@@ -69,7 +70,8 @@ class AgentResponseGenerator:
 
             if response_text is None:
                 response_text = SOFIA_FALLBACKS.get(message_type, SOFIA_FALLBACKS["text"])
-            duration = self._calculate_response_timing(response_text)
+            duration = _calculate_response_timing(
+                response_text, self.char_per_minute, self.typing_variation, self.thinking_time_range)
 
             return {
                 "text": response_text,
@@ -88,19 +90,3 @@ class AgentResponseGenerator:
         if message_type == "image":
             return "User sent an image. Respond enthusiastically and ask about it!"
         return f"{user_message}"
-
-    def _calculate_response_timing(self, response: str) -> float:
-        """Calculate realistic timing for the response"""
-        # Calculate base typing time (chars per second)
-        char_per_second = self.char_per_minute / 60
-        base_typing_time = len(response) / char_per_second
-
-        # Add random variation
-        variation = random.uniform(-self.typing_variation, self.typing_variation)
-        typing_duration = base_typing_time * (1 + variation)
-
-        # Add thinking time
-        thinking_duration = random.uniform(*self.thinking_time_range)
-
-        # Return total duration
-        return  thinking_duration + typing_duration

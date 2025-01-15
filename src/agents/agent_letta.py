@@ -13,20 +13,18 @@ logger = logging.getLogger('instagram_webhook')
 class AgentResponseGenerator:
     def __init__(self):
         self.client = create_client(base_url=os.getenv("LETTA_SERVER", "http://localhost:8283"))
-
         self.system_prompt = SOFIA_SYSTEM_PROMPT
 
         self.llm_config, self.embedding_config = None, None
         for lc in self.client.list_llm_configs():
-            if lc.model == "gpt-4o-mini": self.llm_config = lc
+            if lc.model == os.getenv("LETTA_LLM_MODEL"): self.llm_config = lc
+            else: raise RuntimeError("LETTA_LLM_MODEL isn't available")
         for ec in self.client.list_embedding_configs():
             if ec.embedding_model == "text-embedding-ada-002": self.embedding_config = ec
-        self.memory = ChatMemory(human="", persona=SOFIA_SYSTEM_PROMPT, limit=9500)
+        self.memory = ChatMemory(human="", persona=SOFIA_SYSTEM_PROMPT, limit=13000)
         assert self.llm_config is not None
         assert self.embedding_config is not None
 
-
-        
         # Load timing settings
         self.char_per_minute = SOFIA_TIMING["char_per_minute"]
         self.thinking_time_range = SOFIA_TIMING["thinking_time_range"]
@@ -60,7 +58,7 @@ class AgentResponseGenerator:
                     embedding_config=self.embedding_config,
                     llm_config=self.llm_config
                 )
-            
+
             response = await asyncio.get_event_loop().run_in_executor(
                 None,
                 lambda: self.client.send_message(
@@ -75,43 +73,44 @@ class AgentResponseGenerator:
             for message in response.messages:
                 if message.message_type == "tool_call_message" and message.tool_call.name == "send_message":
                     response_text = json.loads(message.tool_call.arguments).get("message")
-                    
 
-            
+
             if response_text is None:
                 response_text = SOFIA_FALLBACKS.get(message_type, SOFIA_FALLBACKS["text"])
-            duration = self._calculate_response_timing(response_text)
-            
+            duration = _calculate_response_timing(
+                response_text, self.char_per_minute, self.typing_variation, self.thinking_time_range)
+
             return {
                 "text": response_text,
                 "typing_duration": 0 # duration
             }
-            
+
         except Exception as e:
             logger.error(f"Error generating response: {str(e)}", exc_info=True)
             return {
                 "text": SOFIA_FALLBACKS.get(message_type, SOFIA_FALLBACKS["text"]),
                 "typing_duration": 0 # 2
             }
-    
+
     def _get_context_for_message_type(self, message_type: str, user_message: str) -> str:
         """Get appropriate context based on message type"""
         if message_type == "image":
             return "User sent an image. Respond enthusiastically and ask about it!"
         return f"{user_message}"
-    
-    def _calculate_response_timing(self, response: str) -> float:
-        """Calculate realistic timing for the response"""
-        # Calculate base typing time (chars per second)
-        char_per_second = self.char_per_minute / 60
-        base_typing_time = len(response) / char_per_second
-        
-        # Add random variation
-        variation = random.uniform(-self.typing_variation, self.typing_variation)
-        typing_duration = base_typing_time * (1 + variation)
-        
-        # Add thinking time
-        thinking_duration = random.uniform(*self.thinking_time_range)
-        
-        # Return total duration
-        return  thinking_duration + typing_duration
+
+
+def _calculate_response_timing(response: str, char_per_minute, typing_variation, thinking_time_range) -> float:
+    """Calculate realistic timing for the response"""
+    # Calculate base typing time (chars per second)
+    char_per_second = char_per_minute / 60
+    base_typing_time = len(response) / char_per_second
+
+    # Add random variation
+    variation = random.uniform(-typing_variation, typing_variation)
+    typing_duration = base_typing_time * (1 + variation)
+
+    # Add thinking time
+    thinking_duration = random.uniform(*thinking_time_range)
+
+    # Return total duration
+    return  thinking_duration + typing_duration
