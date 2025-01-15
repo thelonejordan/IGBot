@@ -22,7 +22,7 @@ MODEL_CONFIG = dict(
 )
 
 class AgentResponseGenerator:
-    thread_ids: ClassVar[Set[str]] = {}
+    thread_ids: ClassVar[Set[str]] = set()
 
     def __init__(self):
         self.system_prompt = SOFIA_SYSTEM_PROMPT
