@@ -16,9 +16,9 @@ class AgentResponseGenerator:
         self.system_prompt = SOFIA_SYSTEM_PROMPT
 
         self.llm_config, self.embedding_config = None, None
+        # TOD0: models are hardcoded
         for lc in self.client.list_llm_configs():
-            if lc.model == os.getenv("LETTA_LLM_MODEL"): self.llm_config = lc
-            else: raise RuntimeError("LETTA_LLM_MODEL isn't available")
+            if lc.model == "gpt-4o-mini": self.llm_config = lc
         for ec in self.client.list_embedding_configs():
             if ec.embedding_model == "text-embedding-ada-002": self.embedding_config = ec
         self.memory = ChatMemory(human="", persona=SOFIA_SYSTEM_PROMPT, limit=13000)
