@@ -228,7 +228,7 @@ async def handle_message(messaging_item: MessagingItem):
         logger.debug(f"Ignoring message from our bot (ID: {sender_id})")
         return
     
-    if sender_id == "1512552969452550":
+    if sender_id != "1512552969452550":
         return # NOTE: only for testing (remove before production)
 
     logger.info(f"Processing message from sender {sender_id} to recipient {recipient_id}")
